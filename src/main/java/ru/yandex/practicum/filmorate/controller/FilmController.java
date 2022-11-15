@@ -17,8 +17,7 @@ import java.util.Map;
 @Slf4j
 public class FilmController {
 
-
-    private final static LocalDate CUT_OFF_DATE = LocalDate.of(1895, 12, 28);
+    private static final LocalDate CUT_OFF_DATE = LocalDate.of(1895, 12, 28);
     private static Map<Integer, Film> films = new HashMap<>();
     private static int id = 1;
 
@@ -29,7 +28,7 @@ public class FilmController {
 
     @ResponseBody
     @PostMapping
-    public Film postFilms(@RequestBody Film film) {
+    public static Film postFilms(@RequestBody Film film) {
         filmValidate(film);
         film.setId(id++);
         films.put(film.getId(), film);
@@ -50,7 +49,7 @@ public class FilmController {
     }
 
     private static void filmValidate(Film film) {
-        if (StringUtils.isBlank(film.getName()) || film.getName().isBlank()) {
+        if (StringUtils.isBlank(film.getName())) {
             log.error("Ошибка валидации фильма: название фильма");
             throw new ValidationException("Ошибка валидации фильма: названия фильма пустое или состоит из пробелов.");
         } else if (StringUtils.isBlank(film.getDescription())) {
@@ -59,7 +58,7 @@ public class FilmController {
         } else if (StringUtils.length(film.getDescription()) > 200) {
             log.error("Ошибка валидации фильма: длина описания > 200");
             throw new ValidationException("Ошибка валидации фильма: описание фильма превышает 200 символов");
-        } else if (film.getReleaseDate().isBefore(CUT_OFF_DATE)) {
+        } else if (film.getReleaseDate().isBefore(CUT_OFF_DATE) || film.getReleaseDate() == null) {
             log.error("Ошибка валидации фильма: неверная дата издания");
             throw new ValidationException("Ошибка валидации фильма: фильм создан до зарождения кино");
         } else if (film.getDuration() <= 0) {

@@ -25,7 +25,7 @@ public class UserController {
     }
 
     @PostMapping
-    public User postUsers(@RequestBody User user) {
+    public static User postUsers(@RequestBody User user) {
         userValidate(user);
         user.setId(id++);
         users.put(user.getId(), user);
@@ -62,7 +62,7 @@ public class UserController {
         } else if (StringUtils.contains(user.getLogin(), ' ')) {
             log.error("Ошибка валидации пользователя: логин содержит пробелы");
             throw new ValidationException("Пользователь не соответствует критериям: пробелы в логине недопустимы");
-        } else if (user.getBirthday().isAfter(LocalDate.now())) {
+        } else if (user.getBirthday().isAfter(LocalDate.now()) || user.getBirthday() == null) {
             log.error("Ошибка валидации пользователя: дата рождения не наступила");
             throw new ValidationException("Пользователь не соответствует критериям: нельзя родиться в будущем");
         }
