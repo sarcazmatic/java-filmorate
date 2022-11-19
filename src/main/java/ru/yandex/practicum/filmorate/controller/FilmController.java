@@ -1,70 +1,123 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.format.DateTimeFormatters;
+import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+
+import javax.swing.text.DateFormatter;
+import java.time.DateTimeException;
 import java.time.LocalDate;
-import java.util.HashMap;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/films")
-@Slf4j
 public class FilmController {
 
-    private static final LocalDate CUT_OFF_DATE = LocalDate.of(1895, 12, 28);
-    private static Map<Integer, Film> films = new HashMap<>();
-    private static int id = 1;
+    private final FilmStorage filmStorage;
+    private final FilmService filmService;
 
-    @GetMapping
-    public static List<Film> getFilms() {
-        return List.copyOf(films.values());
+    @Autowired
+    public FilmController(FilmStorage filmStorage, FilmService filmService) {
+        this.filmStorage = filmStorage;
+        this.filmService = filmService;
     }
 
-    @ResponseBody
+    @GetMapping
+    public List<Film> getFilms() {
+        return List.copyOf(filmStorage.getFilms().values());
+    }
+
     @PostMapping
-    public static Film postFilms(@RequestBody Film film) {
-        filmValidate(film);
-        film.setId(id++);
-        films.put(film.getId(), film);
-        log.info("Добавлен фильм: " + film);
-        return films.get(film.getId());
+    public Film postFilms(@RequestBody String jsonString) throws JsonProcessingException {
+        Film film = createFilmOutOfBody(jsonString);
+        return filmStorage.postFilms(film);
     }
 
     @PutMapping
-    public Film putFilms(@RequestBody Film film) {
-        filmValidate(film);
-        if (films.containsKey(film.getId())) {
-            films.put(film.getId(), film);
-            log.info("Обновлен пользователь: " + film);
-            return films.get(film.getId());
+    public Film putFilms(@RequestBody String jsonString) throws JsonProcessingException {
+        Film film = createFilmOutOfBody(jsonString);
+        return filmStorage.putFilms(film);
+    }
+
+    @DeleteMapping
+    public void deleteFilms(@RequestBody String jsonString) throws JsonProcessingException {
+        Film film = createFilmOutOfBody(jsonString);
+        filmStorage.deleteFilms(film);
+    }
+
+
+    @PutMapping("/{id}/like/{userId}")
+    public List<String> likeFilm(@PathVariable Integer id, @PathVariable Integer userId) {
+        return filmService.likeFilm(id, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public void deleteLike(@PathVariable Integer id, @PathVariable Integer userId) {
+        filmService.deleteLike(id, userId);
+    }
+
+    @GetMapping("/popular")
+    public List<Film> getPopularMovies(@RequestParam(required = false, defaultValue = "10") String count) {
+        return filmService.getPopularMovies(Integer.parseInt(count));
+    }
+
+
+    @GetMapping("/{id}")
+    public Film getFilmById(@PathVariable Integer id) {
+        if (!filmStorage.getFilms().containsKey(id)) {
+            throw new NotFoundException("Пользователь с id " + id + " не найден");
         } else {
-            throw new ValidationException("Фильма с таким ID не существует");
+            return filmStorage.getFilmById(id);
         }
     }
 
-    private static void filmValidate(Film film) {
-        if (StringUtils.isBlank(film.getName())) {
-            log.error("Ошибка валидации фильма: название фильма");
-            throw new ValidationException("Ошибка валидации фильма: названия фильма пустое или состоит из пробелов.");
-        } else if (StringUtils.isBlank(film.getDescription())) {
-            log.error("Ошибка валидации фильма: описание фильма");
-            throw new ValidationException("Ошибка валидации фильма: описание фильма пустое или состоит из пробелов.");
-        } else if (StringUtils.length(film.getDescription()) > 200) {
-            log.error("Ошибка валидации фильма: длина описания > 200");
-            throw new ValidationException("Ошибка валидации фильма: описание фильма превышает 200 символов");
-        } else if (film.getReleaseDate().isBefore(CUT_OFF_DATE) || film.getReleaseDate() == null) {
-            log.error("Ошибка валидации фильма: неверная дата издания");
-            throw new ValidationException("Ошибка валидации фильма: фильм создан до зарождения кино");
-        } else if (film.getDuration() <= 0) {
-            log.error("Ошибка валидации фильма: продолжительность фильма <= 0 секунд");
-            throw new ValidationException("Ошибка валидации фильма: продолжительность фильма <= 0 секунд");
+    private Film createFilmOutOfBody(String jsonString) throws JsonProcessingException {
+        ObjectMapper om = new ObjectMapper();
+        JsonNode jsonNode = om.readTree(jsonString);
+        int rate = 0;
+        int id = 0;
+        Film film;
+        try {
+            rate = jsonNode.get("rate").asInt();
+        } catch (RuntimeException e) {
+            film = Film.builder()
+                    .name(jsonNode.get("name").asText())
+                    .description(jsonNode.get("description").asText())
+                    .releaseDate(LocalDate.parse(jsonNode.get("releaseDate").asText(), DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                    .duration(jsonNode.get("duration").asInt())
+                    .rate(rate)
+                    .build();
         }
+        film = Film.builder()
+                .name(jsonNode.get("name").asText())
+                .description(jsonNode.get("description").asText())
+                .releaseDate(LocalDate.parse(jsonNode.get("releaseDate").asText(), DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                .duration(jsonNode.get("duration").asInt())
+                .rate(rate)
+                .build();
+        try {
+            id = jsonNode.get("id").asInt();
+        } catch (RuntimeException e) {
+            return film.toBuilder()
+                    .id(id)
+                    .build();
+        }
+        return film.toBuilder()
+                .id(id)
+                .build();
     }
-
 }

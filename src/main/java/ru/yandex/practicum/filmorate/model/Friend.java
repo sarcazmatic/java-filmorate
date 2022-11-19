@@ -7,13 +7,11 @@ import lombok.NonNull;
 
 import javax.validation.constraints.Email;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 
 @Data
 @Builder(toBuilder = true)
-public class User {
+public class Friend {
 
     @EqualsAndHashCode.Exclude
     private int id;
@@ -25,15 +23,5 @@ public class User {
     private String name;
     @NonNull
     private LocalDate birthday;
-    @EqualsAndHashCode.Exclude
-    private List<Friend> friends = new ArrayList<>();
-
-    public void setFriends(List<Friend> newFriends){
-        friends = List.copyOf(newFriends);
-    }
-
-    public List<Friend> getFriends(){
-        return friends;
-    }
 
 }
