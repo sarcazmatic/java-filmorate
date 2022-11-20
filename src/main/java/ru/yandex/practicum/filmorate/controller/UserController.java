@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -14,19 +15,14 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/users")
 @Slf4j
 public class UserController {
 
-    private final UserStorage userStorage;
     private final UserService userService;
 
-    @Autowired
-    public UserController(UserStorage userStorage, UserService userService) {
-        this.userStorage = userStorage;
-        this.userService = userService;
-    }
 
 
     @GetMapping("/{id}/friends")
@@ -36,9 +32,9 @@ public class UserController {
 
     @GetMapping("/{id}/friends/common/{otherId}")
     public List<Friend> getCommonFriends(@PathVariable Integer id, @PathVariable Integer otherId) {
-        if (!userStorage.getUsers().containsKey(id)) {
+        if (!userService.getUsers().containsKey(id)) {
             throw new NotFoundException("Пользователь с  id " + id + " не найден");
-        } else if (!userStorage.getUsers().containsKey(otherId)) {
+        } else if (!userService.getUsers().containsKey(otherId)) {
             throw new NotFoundException("Пользователь с  id " + otherId + " не найден");
         } else {
             return userService.getCommonFriends(id, otherId);
@@ -63,31 +59,31 @@ public class UserController {
 
     @GetMapping
     public List<User> getUsers() {
-        return List.copyOf(userStorage.getUsers().values());
+        return List.copyOf(userService.getUsers().values());
     }
 
     @GetMapping("/{id}")
     public User getUserById(@PathVariable Integer id) {
-        if (!userStorage.getUsers().containsKey(id)) {
+        if (!userService.getUsers().containsKey(id)) {
             throw new NotFoundException("Пользователь с id " + id + " не найден");
         } else {
-            return userStorage.getUserById(id);
+            return userService.getUserById(id);
         }
     }
 
     @PostMapping
     public User postUsers(@RequestBody User user) {
-        return userStorage.postUsers(user);
+        return userService.postUsers(user);
     }
 
     @DeleteMapping
     public void deleteUsers(@RequestBody User user) {
-        userStorage.deleteUsers(user);
+        userService.deleteUsers(user);
     }
 
     @PutMapping
     public User putUsers(@RequestBody User user) {
-            return userStorage.putUsers(user);
+            return userService.putUsers(user);
     }
 
 }

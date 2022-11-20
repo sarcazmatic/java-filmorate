@@ -13,7 +13,6 @@ import java.time.LocalDate;
 @Builder(toBuilder = true)
 public class Friend {
 
-    @EqualsAndHashCode.Exclude
     private int id;
     @Email
     @NonNull

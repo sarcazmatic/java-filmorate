@@ -4,59 +4,45 @@ package ru.yandex.practicum.filmorate.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.StringUtils;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.web.format.DateTimeFormatters;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 
-import javax.swing.text.DateFormatter;
-import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/films")
+@Slf4j
 public class FilmController {
 
-    private final FilmStorage filmStorage;
     private final FilmService filmService;
-
-    @Autowired
-    public FilmController(FilmStorage filmStorage, FilmService filmService) {
-        this.filmStorage = filmStorage;
-        this.filmService = filmService;
-    }
 
     @GetMapping
     public List<Film> getFilms() {
-        return List.copyOf(filmStorage.getFilms().values());
+        return List.copyOf(filmService.getFilms().values());
     }
 
     @PostMapping
-    public Film postFilms(@RequestBody String jsonString) throws JsonProcessingException {
-        Film film = createFilmOutOfBody(jsonString);
-        return filmStorage.postFilms(film);
+    public Film postFilms(@RequestBody Film film) {
+        return filmService.postFilms(film);
     }
 
     @PutMapping
-    public Film putFilms(@RequestBody String jsonString) throws JsonProcessingException {
-        Film film = createFilmOutOfBody(jsonString);
-        return filmStorage.putFilms(film);
+    public Film putFilms(@RequestBody Film film) {
+        return filmService.putFilms(film);
     }
 
     @DeleteMapping
-    public void deleteFilms(@RequestBody String jsonString) throws JsonProcessingException {
-        Film film = createFilmOutOfBody(jsonString);
-        filmStorage.deleteFilms(film);
+    public void deleteFilms(@RequestBody Film film) {
+        filmService.deleteFilms(film);
     }
 
 
@@ -75,49 +61,13 @@ public class FilmController {
         return filmService.getPopularMovies(Integer.parseInt(count));
     }
 
-
     @GetMapping("/{id}")
     public Film getFilmById(@PathVariable Integer id) {
-        if (!filmStorage.getFilms().containsKey(id)) {
+        if (!filmService.getFilms().containsKey(id)) {
             throw new NotFoundException("Пользователь с id " + id + " не найден");
         } else {
-            return filmStorage.getFilmById(id);
+            return filmService.getFilmById(id);
         }
     }
 
-    private Film createFilmOutOfBody(String jsonString) throws JsonProcessingException {
-        ObjectMapper om = new ObjectMapper();
-        JsonNode jsonNode = om.readTree(jsonString);
-        int rate = 0;
-        int id = 0;
-        Film film;
-        try {
-            rate = jsonNode.get("rate").asInt();
-        } catch (RuntimeException e) {
-            film = Film.builder()
-                    .name(jsonNode.get("name").asText())
-                    .description(jsonNode.get("description").asText())
-                    .releaseDate(LocalDate.parse(jsonNode.get("releaseDate").asText(), DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-                    .duration(jsonNode.get("duration").asInt())
-                    .rate(rate)
-                    .build();
-        }
-        film = Film.builder()
-                .name(jsonNode.get("name").asText())
-                .description(jsonNode.get("description").asText())
-                .releaseDate(LocalDate.parse(jsonNode.get("releaseDate").asText(), DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-                .duration(jsonNode.get("duration").asInt())
-                .rate(rate)
-                .build();
-        try {
-            id = jsonNode.get("id").asInt();
-        } catch (RuntimeException e) {
-            return film.toBuilder()
-                    .id(id)
-                    .build();
-        }
-        return film.toBuilder()
-                .id(id)
-                .build();
-    }
 }

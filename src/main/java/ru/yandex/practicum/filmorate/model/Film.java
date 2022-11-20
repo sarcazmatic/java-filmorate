@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,10 @@ public class Film {
     @EqualsAndHashCode.Exclude
     private int rate;
     @EqualsAndHashCode.Exclude
-    private List<String> likes;
+    private List<String> likes = new ArrayList<>();
+
+    public List<String> getLikes(){
+        return likes;
+    }
 
 }

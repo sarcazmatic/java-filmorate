@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import org.springframework.web.bind.annotation.RequestBody;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
@@ -26,6 +27,25 @@ public class FilmService {
         this.userStorage = userStorage;
     }
 
+    public Map<Integer, Film> getFilms() {
+        return filmStorage.getFilms();
+    }
+
+    public Film postFilms(Film film) {
+        return filmStorage.postFilms(film);
+    }
+
+    public Film putFilms(Film film) {
+        return filmStorage.putFilms(film);
+    }
+
+    public void deleteFilms(Film film) {
+        filmStorage.deleteFilms(film);
+    }
+
+    public Film getFilmById(Integer id) {
+        return filmStorage.getFilmById(id);
+    }
 
     public List<String> likeFilm(Integer id, Integer userId) {
         List<String> likesList;
@@ -50,23 +70,16 @@ public class FilmService {
 
     public List<Film> getPopularMovies(Integer count) {
         List<Film> popularFilms;
-        if (filmStorage.getFilms() == null) {
+        if (filmStorage.getFilms().isEmpty()) {
             popularFilms = new ArrayList<>();
-            System.out.println(popularFilms + " Тест0");
         } else {
             popularFilms = new ArrayList<>(filmStorage.getFilms().values());
-            System.out.println(popularFilms + " Тест1");
             popularFilms.sort(new PopularityComparator());
-            System.out.println(popularFilms + " Тест1.5");
         }
-        System.out.println(popularFilms + " Тест2");
         if (count > popularFilms.size()) {
             count = popularFilms.size();
         }
-        System.out.println(count + " счет");
         List<Film> testingList = popularFilms.stream().limit(count).collect(Collectors.toList());
-        System.out.println(testingList.size() + " размер");
-        System.out.println(testingList + " список");
         return testingList;
     }
 }
