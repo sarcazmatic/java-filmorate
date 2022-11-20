@@ -51,7 +51,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void addFriendsZeroFriends() {
+    void addFriendsZeroFriends() {
 
         userStorage.postUsers(user1);
         userStorage.postUsers(user2);

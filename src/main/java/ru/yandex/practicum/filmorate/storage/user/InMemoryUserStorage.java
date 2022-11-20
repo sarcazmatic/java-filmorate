@@ -53,7 +53,7 @@ public class InMemoryUserStorage implements UserStorage {
         if (users.get(user.getId()).equals(user)) {
             users.remove(user.getId());
         } else {
-            throw new RuntimeException("Нет такого пользователя");
+            throw new NotFoundException("Нет такого пользователя");
         }
     }
 

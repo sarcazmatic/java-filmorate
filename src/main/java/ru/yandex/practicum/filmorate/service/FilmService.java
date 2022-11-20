@@ -1,12 +1,10 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import org.springframework.web.bind.annotation.RequestBody;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -14,18 +12,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class FilmService {
 
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
     private static final String LIKE = "like";
-
-
-    @Autowired
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
-    }
 
     public Map<Integer, Film> getFilms() {
         return filmStorage.getFilms();
@@ -79,8 +71,7 @@ public class FilmService {
         if (count > popularFilms.size()) {
             count = popularFilms.size();
         }
-        List<Film> testingList = popularFilms.stream().limit(count).collect(Collectors.toList());
-        return testingList;
+        return popularFilms.stream().limit(count).collect(Collectors.toList());
     }
 }
 
@@ -97,13 +88,7 @@ class PopularityComparator implements Comparator<Film> {
         if (o1.getLikes() == null) {
             return -1;
         }
-        if (o2.getLikes().size() > o1.getLikes().size()) {
-            return 1;
-        } else if ((o2.getLikes().size() < o1.getLikes().size())) {
-            return -1;
-        } else {
-            return 0;
-        }
+        return Integer.compare(o2.getLikes().size(), o1.getLikes().size());
     }
 
 }

@@ -1,9 +1,9 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.URLParametersException;
 import ru.yandex.practicum.filmorate.model.Friend;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -14,14 +14,10 @@ import java.util.Map;
 
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    private static UserStorage userStorage;
-
-    @Autowired
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
+    private final UserStorage userStorage;
 
     public Map<Integer, User> getUsers() {
         return userStorage.getUsers();
@@ -44,23 +40,27 @@ public class UserService {
     }
 
     public void addFriends(Integer id, Integer friendId) {
-        if (userStorage.getUsers().containsKey(id)
-                && userStorage.getUsers().containsKey(friendId)) {
+        if (!id.equals(friendId)) {
+            if (userStorage.getUsers().containsKey(id)
+                    && userStorage.getUsers().containsKey(friendId)) {
 
-            createAndAddFriend(id, friendId);
-            createAndAddFriend(friendId, id);
+                createAndAddFriend(id, friendId);
+                createAndAddFriend(friendId, id);
 
+            } else {
+                throw new NotFoundException("Объект не найден");
+            }
         } else {
-            throw new NotFoundException("Объект не найден");
+            throw new URLParametersException("Переданы одинаковые id");
         }
     }
 
     public void removeFriends(Integer id, Integer friendId) {
-        if (id != friendId) {
+        if (!id.equals(friendId)) {
             safelyRemoveFriends(id, friendId);
             safelyRemoveFriends(friendId, id);
         } else {
-            throw new RuntimeException("Переданы одинаковые id");
+            throw new URLParametersException("Переданы одинаковые id");
         }
     }
 
@@ -69,45 +69,45 @@ public class UserService {
     }
 
     public List<Friend> getCommonFriends(Integer id, Integer otherId) {
-        List<Friend> commonFriends = new ArrayList<>();
-        if (getUserFriends(id) != null && getUserFriends(otherId) != null) {
-            for (Friend u1 : getUserFriends(id)) {
-                for (Friend u2 : getUserFriends(otherId)) {
-                    if (u1.equals(u2)) {
-                        commonFriends.add(u1);
+        if (!id.equals(otherId)) {
+            List<Friend> commonFriends = new ArrayList<>();
+            if (getUserFriends(id) != null && getUserFriends(otherId) != null) {
+                for (Friend u1 : getUserFriends(id)) {
+                    for (Friend u2 : getUserFriends(otherId)) {
+                        if (u1.equals(u2)) {
+                            commonFriends.add(u1);
+                        }
                     }
                 }
             }
+            return commonFriends;
+        } else {
+            throw new URLParametersException("Переданы одинаковые id");
         }
-        return commonFriends;
     }
 
-    private void createAndAddFriend(Integer idHost, Integer idFriend) {
-        if (idHost != idFriend) {
-            Friend friend = Friend.builder()
-                    .birthday(userStorage.getUsers().get(idFriend).getBirthday())
-                    .name(userStorage.getUsers().get(idFriend).getName())
-                    .login(userStorage.getUsers().get(idFriend).getLogin())
-                    .id(userStorage.getUsers().get(idFriend).getId())
-                    .email(userStorage.getUsers().get(idFriend).getEmail())
-                    .build();
+    private void createAndAddFriend(int idHost, int idFriend) {
+        Friend friend = Friend.builder()
+                .birthday(userStorage.getUsers().get(idFriend).getBirthday())
+                .name(userStorage.getUsers().get(idFriend).getName())
+                .login(userStorage.getUsers().get(idFriend).getLogin())
+                .id(userStorage.getUsers().get(idFriend).getId())
+                .email(userStorage.getUsers().get(idFriend).getEmail())
+                .build();
 
 
-            List<Friend> idFriendsList;
-            if (userStorage.getUserById(idHost).getFriends() != null) {
-                idFriendsList = new ArrayList<>(userStorage.getUserById(idHost).getFriends());
-                if (idFriendsList.contains(friend)) {
-                    idFriendsList.remove(friend);
-                }
-            } else {
-                idFriendsList = new ArrayList<>();
+        List<Friend> idFriendsList;
+        if (userStorage.getUserById(idHost).getFriends() != null) {
+            idFriendsList = new ArrayList<>(userStorage.getUserById(idHost).getFriends());
+            if (idFriendsList.contains(friend)) {
+                idFriendsList.remove(friend);
             }
-            idFriendsList.add(friend);
-
-            userStorage.getUsers().get(idHost).setFriends(idFriendsList);
         } else {
-            throw new RuntimeException("Переданы одинаковые id");
+            idFriendsList = new ArrayList<>();
         }
+        idFriendsList.add(friend);
+
+        userStorage.getUsers().get(idHost).setFriends(idFriendsList);
     }
 
     private void safelyRemoveFriends(Integer idHost, Integer idFriend) {
@@ -127,7 +127,7 @@ public class UserService {
 
             userStorage.getUsers().get(idHost).setFriends(idFriendsList);
         } else {
-            throw new RuntimeException("Переданы одинаковые id");
+            throw new URLParametersException("Переданы одинаковые id");
         }
     }
 

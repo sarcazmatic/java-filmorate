@@ -55,24 +55,28 @@ public class UserStorageTest {
     void postUserEmptyLogin() {
         User userEmptyLogin = user.toBuilder().login(" ").build();
         final ValidationException e = assertThrows(ValidationException.class, () -> userStorage.postUsers(userEmptyLogin));
+        assertEquals(e.getMessage(), "Пользователь не соответствует критериям: логин пуст");
     }
 
     @Test
     void postUserLoginWithSpaces() {
         User userLoginWithSpaces = user.toBuilder().login("qq qq").build();
         final ValidationException e = assertThrows(ValidationException.class, () -> userStorage.postUsers(userLoginWithSpaces));
+        assertEquals(e.getMessage(), "Пользователь не соответствует критериям: пробелы в логине недопустимы");
     }
 
     @Test
     void postUserEmailWithoutAtSymbol() {
         User userInvalidEmail = user.toBuilder().email("waah").build();
         final ValidationException e = assertThrows(ValidationException.class, () -> userStorage.postUsers(userInvalidEmail));
+        assertEquals(e.getMessage(), "Пользователь не соответствует критериям: e-mail не содержит @");
     }
 
     @Test
     void postUserFromFuture() {
         User userFromFuture = user.toBuilder().birthday(LocalDate.now().plusDays(1)).build();
         final ValidationException e = assertThrows(ValidationException.class, () -> userStorage.postUsers(userFromFuture));
+        assertEquals(e.getMessage(), "Пользователь не соответствует критериям: нельзя родиться в будущем");
     }
 
     @Test
@@ -101,24 +105,28 @@ public class UserStorageTest {
     void putUserEmptyLogin() {
         User userEmptyLogin = user.toBuilder().login(" ").build();
         final ValidationException e = assertThrows(ValidationException.class, () -> userStorage.putUsers(userEmptyLogin));
+        assertEquals(e.getMessage(), "Пользователь не соответствует критериям: логин пуст");
     }
 
     @Test
     void putUserLoginWithSpaces() {
         User userLoginWithSpaces = user.toBuilder().login("qq qq").build();
         final ValidationException e = assertThrows(ValidationException.class, () -> userStorage.putUsers(userLoginWithSpaces));
+        assertEquals(e.getMessage(), "Пользователь не соответствует критериям: пробелы в логине недопустимы");
     }
 
     @Test
     void putUserEmailWithoutAtSymbol() {
         User userInvalidEmail = user.toBuilder().email("waah").build();
         final ValidationException e = assertThrows(ValidationException.class, () -> userStorage.putUsers(userInvalidEmail));
+        assertEquals(e.getMessage(), "Пользователь не соответствует критериям: e-mail не содержит @");
     }
 
     @Test
     void putUserFromFuture() {
         User userFromFuture = user.toBuilder().birthday(LocalDate.now().plusDays(1)).build();
         final ValidationException e = assertThrows(ValidationException.class, () -> userStorage.putUsers(userFromFuture));
+        assertEquals(e.getMessage(), "Пользователь не соответствует критериям: нельзя родиться в будущем");
     }
 }
 

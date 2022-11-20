@@ -2,16 +2,11 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
-import ru.yandex.practicum.filmorate.exception.ErrorHandler;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Friend;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
 
@@ -45,7 +40,7 @@ public class UserController {
     public void addFriends(@PathVariable Integer id, @PathVariable Integer friendId) {
         if (id <= 0) {
             throw new NotFoundException("id не может быть меньше или равен нулю.");
-        } if (friendId <= 0) {
+        } else if (friendId <= 0) {
             throw new NotFoundException("id не может быть меньше или равен нулю.");
         } else {
             userService.addFriends(id, friendId);

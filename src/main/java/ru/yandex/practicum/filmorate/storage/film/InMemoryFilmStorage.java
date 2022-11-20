@@ -49,7 +49,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         if (films.get(film.getId()).equals(film)) {
             films.remove(film.getId());
         } else {
-            throw new RuntimeException("Нет такого фильма");
+            throw new NotFoundException("Нет такого фильма");
         }
     }
 

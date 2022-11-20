@@ -22,6 +22,12 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleURLParametersException(final URLParametersException e){
+        return new ErrorResponse("Ошибка в передачи параметров URL", e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleRuntimeException(final RuntimeException e) {
         return new ErrorResponse("Внутренняя ошибка сервера", e.getMessage());
     }
