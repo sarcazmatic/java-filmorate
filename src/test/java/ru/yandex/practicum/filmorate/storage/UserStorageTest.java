@@ -28,7 +28,7 @@ public class UserStorageTest {
                 .email("what@what.ru")
                 .name("Valid Vlad")
                 .id(44)
-                .friends(null)
+                .friendship(null)
                 .build();
     }
 
