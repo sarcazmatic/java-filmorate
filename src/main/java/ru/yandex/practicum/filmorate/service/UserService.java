@@ -2,15 +2,18 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.AlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.URLParametersException;
 import ru.yandex.practicum.filmorate.model.Friend;
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static ru.yandex.practicum.filmorate.model.FriendshipStatus.ACCEPTED;
+import static ru.yandex.practicum.filmorate.model.FriendshipStatus.PENDING;
 
 
 @Service
@@ -65,25 +68,30 @@ public class UserService {
     }
 
     public List<Friend> getUserFriends(Integer id) {
-        return userStorage.getUserById(id).getFriends();
+        List<Friend> friends = new ArrayList<>();
+        if (userStorage.getUserById(id).getFriendship() != null) {
+            if (userStorage.getUserById(id).getFriendship().containsKey(PENDING)) {
+                friends = userStorage.getUserById(id).getFriendship().get(PENDING);
+            }
+            if (userStorage.getUserById(id).getFriendship().containsKey(ACCEPTED)) {
+                friends.addAll(userStorage.getUserById(id).getFriendship().get(ACCEPTED));
+            }
+        }
+        return friends;
     }
 
     public List<Friend> getCommonFriends(Integer id, Integer otherId) {
-        if (!id.equals(otherId)) {
-            List<Friend> commonFriends = new ArrayList<>();
-            if (getUserFriends(id) != null && getUserFriends(otherId) != null) {
-                for (Friend u1 : getUserFriends(id)) {
-                    for (Friend u2 : getUserFriends(otherId)) {
-                        if (u1.equals(u2)) {
-                            commonFriends.add(u1);
-                        }
+        List<Friend> commonFriends = new ArrayList<>();
+        if (getUserFriends(id) != null && getUserFriends(otherId) != null) {
+            for (Friend u1 : getUserFriends(id)) {
+                for (Friend u2 : getUserFriends(otherId)) {
+                    if (u1.equals(u2)) {
+                        commonFriends.add(u1);
                     }
                 }
             }
-            return commonFriends;
-        } else {
-            throw new URLParametersException("Переданы одинаковые id");
         }
+        return commonFriends;
     }
 
     private void createAndAddFriend(int idHost, int idFriend) {
@@ -95,23 +103,30 @@ public class UserService {
                 .email(userStorage.getUsers().get(idFriend).getEmail())
                 .build();
 
+        Map<FriendshipStatus, List<Friend>> newFriendship = new EnumMap<>(FriendshipStatus.class);
+        List<Friend> idFriendsListPen = new ArrayList<>();
+        List<Friend> idFriendsListAcc = new ArrayList<>();
+        newFriendship.put(PENDING, null);
+        newFriendship.put(ACCEPTED, null);
 
-        List<Friend> idFriendsList;
-        if (userStorage.getUserById(idHost).getFriends() != null) {
-            idFriendsList = new ArrayList<>(userStorage.getUserById(idHost).getFriends());
-            if (idFriendsList.contains(friend)) {
-                idFriendsList.remove(friend);
+        if (userStorage.getUserById(idHost).getFriendship() != null) {
+            if (userStorage.getUserById(idHost).getFriendship().get(PENDING).contains(friend)) {
+                throw new AlreadyAddedException("Друг уже дожидается апрува");
+            } else if (userStorage.getUserById(idHost).getFriendship().get(ACCEPTED).contains(friend)) {
+                throw new AlreadyAddedException("Друг уже дружит с вами");
             }
-        } else {
-            idFriendsList = new ArrayList<>();
+            idFriendsListPen = userStorage.getUserById(idHost).getFriendship().get(PENDING);
+            idFriendsListAcc = userStorage.getUserById(idHost).getFriendship().get(ACCEPTED);
         }
-        idFriendsList.add(friend);
-
-        userStorage.getUsers().get(idHost).setFriends(idFriendsList);
+        idFriendsListPen.add(friend);
+        newFriendship.put(PENDING, idFriendsListPen);
+        newFriendship.put(ACCEPTED, idFriendsListAcc);
+        userStorage.getUserById(idHost).setFriendship(newFriendship);
     }
 
     private void safelyRemoveFriends(Integer idHost, Integer idFriend) {
-        if (userStorage.getUserById(idHost).getFriends() != null) {
+
+        if (userStorage.getUserById(idHost).getFriendship() != null) {
             Friend friend = Friend.builder()
                     .birthday(userStorage.getUsers().get(idFriend).getBirthday())
                     .name(userStorage.getUsers().get(idFriend).getName())
@@ -121,14 +136,25 @@ public class UserService {
                     .build();
 
 
-            List<Friend> idFriendsList;
-            idFriendsList = new ArrayList<>(userStorage.getUserById(idHost).getFriends());
-            idFriendsList.remove(friend);
-
-            userStorage.getUsers().get(idHost).setFriends(idFriendsList);
+            Map<FriendshipStatus, List<Friend>> newFriendship = new EnumMap<>(FriendshipStatus.class);
+            newFriendship.put(PENDING, null);
+            newFriendship.put(ACCEPTED, null);
+            List<Friend> idFriendsListPen = userStorage.getUserById(idHost).getFriendship().get(PENDING);
+            List<Friend> idFriendsListAcc = userStorage.getUserById(idHost).getFriendship().get(ACCEPTED);
+            if (idFriendsListPen.contains(friend)) {
+                idFriendsListPen.remove(friend);
+            } else if (idFriendsListAcc.contains(friend)) {
+                idFriendsListAcc.remove(friend);
+            } else {
+                throw new NotFoundException("Друзья не найдены");
+            }
+            newFriendship.put(PENDING, idFriendsListPen);
+            newFriendship.put(ACCEPTED, idFriendsListAcc);
+            userStorage.getUsers().get(idHost).setFriendship(newFriendship);
         } else {
-            throw new URLParametersException("Переданы одинаковые id");
+            throw new NotFoundException("Список друзей и так пуст");
         }
+
     }
 
 }

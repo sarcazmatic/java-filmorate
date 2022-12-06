@@ -27,6 +27,8 @@ public class Film {
     private int rate;
     @EqualsAndHashCode.Exclude
     private List<String> likes = new ArrayList<>();
+    private Rating rating;
+    private List<Genre> genre;
 
     public List<String> getLikes(){
         return likes;

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.URLParametersException;
 import ru.yandex.practicum.filmorate.model.Friend;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -31,6 +32,8 @@ public class UserController {
             throw new NotFoundException("Пользователь с  id " + id + " не найден");
         } else if (!userService.getUsers().containsKey(otherId)) {
             throw new NotFoundException("Пользователь с  id " + otherId + " не найден");
+        } else if (id.equals(otherId)) {
+            throw new URLParametersException("В параметрах переданы одинаковые id");
         } else {
             return userService.getCommonFriends(id, otherId);
         }
