@@ -1,25 +1,25 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder(toBuilder = true)
 public class Film {
-
     private int id;
-    @NonNull
-    private String name;
-    @NonNull
-    private String description;
-    @NonNull
-    private final LocalDate releaseDate;
-    @NonNull
-    private final int duration;
-    @NonNull
+    private @NonNull String name;
+    private @NonNull String description;
+    private @NonNull LocalDate releaseDate;
+    private @NonNull int duration;
     private int rate;
+    @JsonIgnore
+    private List<User> likes;
+    private Rating rating;
+    private List<Genre> genre;
 
 }
