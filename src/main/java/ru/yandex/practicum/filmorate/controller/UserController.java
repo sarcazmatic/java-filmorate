@@ -14,32 +14,28 @@ import java.util.List;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/users")
-@Slf4j
 public class UserController {
-
     private final UserService userService;
 
-
-
-    @GetMapping("/{id}/friends")
-    public List<Friend> getUserFriends(@PathVariable Integer id) {
+    @GetMapping({"/{id}/friends"})
+    public List<User> getUserFriends(@PathVariable Integer id) {
         return userService.getUserFriends(id);
     }
 
-    @GetMapping("/{id}/friends/common/{otherId}")
-    public List<Friend> getCommonFriends(@PathVariable Integer id, @PathVariable Integer otherId) {
-        if (!userService.getUsers().containsKey(id)) {
+    @GetMapping({"/{id}/friends/common/{otherId}"})
+    public List<User> getCommonFriends(@PathVariable Integer id, @PathVariable Integer otherId) {
+        if (!this.userService.getUsers().containsKey(id)) {
             throw new NotFoundException("Пользователь с  id " + id + " не найден");
-        } else if (!userService.getUsers().containsKey(otherId)) {
+        } else if (!this.userService.getUsers().containsKey(otherId)) {
             throw new NotFoundException("Пользователь с  id " + otherId + " не найден");
         } else if (id.equals(otherId)) {
             throw new URLParametersException("В параметрах переданы одинаковые id");
         } else {
-            return userService.getCommonFriends(id, otherId);
+            return this.userService.getCommonFriends(id, otherId);
         }
     }
 
-    @PutMapping("/{id}/friends/{friendId}")
+    @PutMapping({"/{id}/friends/{friendId}"})
     public void addFriends(@PathVariable Integer id, @PathVariable Integer friendId) {
         if (id <= 0) {
             throw new NotFoundException("id не может быть меньше или равен нулю.");
@@ -50,7 +46,7 @@ public class UserController {
         }
     }
 
-    @DeleteMapping("/{id}/friends/{friendId}")
+    @DeleteMapping({"/{id}/friends/{friendId}"})
     public void removeFriends(@PathVariable Integer id, @PathVariable Integer friendId) {
         userService.removeFriends(id, friendId);
     }
@@ -60,7 +56,7 @@ public class UserController {
         return List.copyOf(userService.getUsers().values());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping({"/{id}"})
     public User getUserById(@PathVariable Integer id) {
         if (!userService.getUsers().containsKey(id)) {
             throw new NotFoundException("Пользователь с id " + id + " не найден");
@@ -81,7 +77,7 @@ public class UserController {
 
     @PutMapping
     public User putUsers(@RequestBody User user) {
-            return userService.putUsers(user);
+        return userService.putUsers(user);
     }
 
 }

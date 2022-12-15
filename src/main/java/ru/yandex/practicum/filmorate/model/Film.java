@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,25 +13,18 @@ import java.util.List;
 @Data
 @Builder(toBuilder = true)
 public class Film {
-
-    @EqualsAndHashCode.Exclude
     private int id;
-    @NonNull
-    private String name;
-    @NonNull
-    private String description;
-    @NonNull
-    private LocalDate releaseDate;
-    @NonNull
-    private int duration;
-    @EqualsAndHashCode.Exclude
+    private @NonNull String name;
+    private @NonNull String description;
+    private @NonNull LocalDate releaseDate;
+    private @NonNull int duration;
     private int rate;
-    @EqualsAndHashCode.Exclude
-    private List<String> likes = new ArrayList<>();
+    @JsonIgnore
+    private List<User> likes;
     private Rating rating;
     private List<Genre> genre;
 
-    public List<String> getLikes(){
+    public List<User> getLikes(){
         return likes;
     }
 
