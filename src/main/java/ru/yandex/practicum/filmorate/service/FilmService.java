@@ -20,53 +20,53 @@ public class FilmService {
     private static final String LIKE = "like";
 
     public Map<Integer, Film> getFilms() {
-        return this.filmStorage.getFilms();
+        return filmStorage.getFilms();
     }
 
     public Film postFilms(Film film) {
-        return this.filmStorage.postFilms(film);
+        return filmStorage.postFilms(film);
     }
 
     public Film putFilms(Film film) {
-        return this.filmStorage.putFilms(film);
+        return filmStorage.putFilms(film);
     }
 
     public void deleteFilms(Film film) {
-        this.filmStorage.deleteFilms(film);
+        filmStorage.deleteFilms(film);
     }
 
     public Film getFilmById(Integer id) {
-        return this.filmStorage.getFilmById(id);
+        return filmStorage.getFilmById(id);
     }
 
     public List<User> likeFilm(Integer id, Integer userId) {
-        ArrayList likesList;
-        if (this.filmStorage.getFilmById(id).getLikes() == null) {
-            likesList = new ArrayList();
+        List<User> likesList;
+        if (filmStorage.getFilmById(id).getLikes() == null) {
+            likesList = new ArrayList<>();
         } else {
-            likesList = new ArrayList(this.filmStorage.getFilmById(id).getLikes());
+            likesList = new ArrayList<>(filmStorage.getFilmById(id).getLikes());
         }
 
-        likesList.add(this.userStorage.getUserById(userId));
-        Film film = this.filmStorage.getFilmById(id).toBuilder().likes(likesList).build();
-        this.filmStorage.getFilms().replace(film.getId(), film);
-        return this.filmStorage.getFilmById(id).getLikes();
+        likesList.add(userStorage.getUserById(userId));
+        Film film = filmStorage.getFilmById(id).toBuilder().likes(likesList).build();
+        filmStorage.getFilms().replace(film.getId(), film);
+        return filmStorage.getFilmById(id).getLikes();
     }
 
     public void deleteLike(Integer id, Integer userId) {
-        if (this.userStorage.getUsers().containsKey(userId)) {
-            ((Film)this.filmStorage.getFilms().get(id)).getLikes().remove(this.userStorage.getUsers().get(userId));
+        if (userStorage.getUsers().containsKey(userId)) {
+            (filmStorage.getFilms().get(id)).getLikes().remove(userStorage.getUsers().get(userId));
         } else {
             throw new NotFoundException("Нельзя удалить лайк от несуществующего пользователя!");
         }
     }
 
     public List<Film> getPopularMovies(Integer count) {
-        ArrayList popularFilms;
-        if (this.filmStorage.getFilms().isEmpty()) {
-            popularFilms = new ArrayList();
+        List<Film> popularFilms;
+        if (filmStorage.getFilms().isEmpty()) {
+            popularFilms = new ArrayList<>();
         } else {
-            popularFilms = new ArrayList(this.filmStorage.getFilms().values());
+            popularFilms = new ArrayList<>(filmStorage.getFilms().values());
             popularFilms.sort(new PopularityComparator());
         }
 
@@ -74,7 +74,7 @@ public class FilmService {
             count = popularFilms.size();
         }
 
-        return (List)popularFilms.stream().limit((long)count).collect(Collectors.toList());
+        return popularFilms.stream().limit(count).collect(Collectors.toList());
     }
 }
 

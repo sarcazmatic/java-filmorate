@@ -22,11 +22,11 @@ public class User {
     private Map<FriendshipStatus, List<User>> friendship;
 
     public void setFriendship(Map<FriendshipStatus, List<User>> newFriendship) {
-        this.friendship = newFriendship;
+        friendship = newFriendship;
     }
 
     public Map<FriendshipStatus, List<User>> getFriendship() {
-        return this.friendship;
+        return friendship;
     }
 
 }
