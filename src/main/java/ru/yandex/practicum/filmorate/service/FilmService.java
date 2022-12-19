@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -17,7 +18,6 @@ import java.util.stream.Collectors;
 public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
-    private static final String LIKE = "like";
 
     public Map<Integer, Film> getFilms() {
         return filmStorage.getFilms();
@@ -48,10 +48,12 @@ public class FilmService {
         }
 
         likesList.add(userStorage.getUserById(userId));
-        Film film = filmStorage.getFilmById(id).toBuilder().likes(likesList).build();
-        filmStorage.getFilms().replace(film.getId(), film);
+        getFilmById(id).setLikes(likesList);
+        Film film = getFilmById(id).toBuilder().likes(likesList).build();
+        filmStorage.putFilms(film);
         return filmStorage.getFilmById(id).getLikes();
     }
+
 
     public void deleteLike(Integer id, Integer userId) {
         if (userStorage.getUsers().containsKey(userId)) {

@@ -1,8 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -14,7 +14,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/films")
-@Slf4j
 public class FilmController {
 
     private final FilmService filmService;
@@ -44,6 +43,7 @@ public class FilmController {
     public List<User> likeFilm(@PathVariable Integer id, @PathVariable Integer userId) {
         return filmService.likeFilm(id, userId);
     }
+
 
     @DeleteMapping("/{id}/like/{userId}")
     public void deleteLike(@PathVariable Integer id, @PathVariable Integer userId) {

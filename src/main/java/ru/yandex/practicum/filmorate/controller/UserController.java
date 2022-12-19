@@ -4,10 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.URLParametersException;
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -69,7 +73,7 @@ public class UserController {
     }
 
     @DeleteMapping
-    public void deleteUsers(@RequestBody User user) {
+    public void deleteUsers(@RequestBody User user) throws IOException {
         userService.deleteUsers(user);
     }
 

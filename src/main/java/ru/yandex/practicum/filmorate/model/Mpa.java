@@ -4,19 +4,19 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Map;
 
 @Builder
 @Data
 @RequiredArgsConstructor
-public class Genre<Integer, String> {
+public class Mpa<String, Integer> {
 
-    private Integer id;
     private String name;
+    @Builder.Default private int id = 1;
 
-    public Genre(Integer id, String name){
+
+    public Mpa(String name, int id){
+        this.name = name;
         this.id = id;
-        this.name=name;
     }
 
 }

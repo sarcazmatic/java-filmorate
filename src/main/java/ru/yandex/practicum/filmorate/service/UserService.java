@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.AlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -15,6 +17,7 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class UserService {
+
     private final UserStorage userStorage;
 
     public Map<Integer, User> getUsers() {
@@ -40,8 +43,7 @@ public class UserService {
     public void addFriends(Integer id, Integer friendId) {
         if (!id.equals(friendId)) {
             if (userStorage.getUsers().containsKey(id) && userStorage.getUsers().containsKey(friendId)) {
-                createAndAddFriend(id, friendId);
-                createAndAddFriend(friendId, id);
+                userStorage.putFriend(id, friendId);
             } else {
                 throw new NotFoundException("Объект не найден");
             }
@@ -52,23 +54,17 @@ public class UserService {
 
     public void removeFriends(Integer id, Integer friendId) {
         if (!id.equals(friendId)) {
-            safelyRemoveFriends(id, friendId);
-            safelyRemoveFriends(friendId, id);
+            userStorage.removeFriends(id, friendId);
         } else {
             throw new URLParametersException("Переданы одинаковые id");
         }
     }
 
     public List<User> getUserFriends(Integer id) {
+
         List<User> friends = new ArrayList<>();
         if (userStorage.getUserById(id).getFriendship() != null) {
-            if (userStorage.getUserById(id).getFriendship().containsKey(FriendshipStatus.PENDING)) {
-                friends = userStorage.getUserById(id).getFriendship().get(FriendshipStatus.PENDING);
-            }
-
-            if (userStorage.getUserById(id).getFriendship().containsKey(FriendshipStatus.ACCEPTED)) {
-                (friends).addAll(userStorage.getUserById(id).getFriendship().get(FriendshipStatus.ACCEPTED));
-            }
+                friends = userStorage.getUsersFriends(id);
         }
 
         return friends;
@@ -76,10 +72,12 @@ public class UserService {
 
     public List<User> getCommonFriends(Integer id, Integer otherId) {
         List<User> commonFriends = new ArrayList<>();
+        List<User> iDfriends = new ArrayList<>(getUserFriends(id));
+        List<User> otherIdFriends = new ArrayList<>(getUserFriends(otherId));
         if (getUserFriends(id) != null && getUserFriends(otherId) != null) {
-            for (User u1 : getUserFriends(id)) {
-                for (User u2 : getUserFriends(otherId)) {
-                    if (u1.equals(u2)) {
+            for (User u1 : iDfriends) {
+                for (User u2 : otherIdFriends) {
+                    if (u1.getId() == u2.getId()) {
                         commonFriends.add(u1);
                     }
                 }
@@ -89,18 +87,18 @@ public class UserService {
         return commonFriends;
     }
 
-    private void createAndAddFriend(int idHost, int idFriend) {
+    /*private void createAndAddFriend(int idHost, int idFriend) {
         Map<FriendshipStatus, List<User>> newFriendship = new EnumMap<>(FriendshipStatus.class);
         List<User> idFriendsListPen = new ArrayList<>();
         List<User> idFriendsListAcc = new ArrayList<>();
         newFriendship.put(FriendshipStatus.PENDING, null);
         newFriendship.put(FriendshipStatus.ACCEPTED, null);
         if (userStorage.getUserById(idHost).getFriendship() != null) {
-            if ((userStorage.getUserById(idHost).getFriendship().get(FriendshipStatus.PENDING)).contains(userStorage.getUsers().get(idFriend))) {
+            if ((userStorage.getUserById(idHost).getFriendship().get(FriendshipStatus.PENDING)).contains(userStorage.getUserById(idFriend))) {
                 throw new AlreadyAddedException("Друг уже дожидается апрува");
             }
 
-            if ((userStorage.getUserById(idHost).getFriendship().get(FriendshipStatus.ACCEPTED)).contains(userStorage.getUsers().get(idFriend))) {
+            if ((userStorage.getUserById(idHost).getFriendship().get(FriendshipStatus.ACCEPTED)).contains(userStorage.getUserById(idFriend))) {
                 throw new AlreadyAddedException("Друг уже дружит с вами");
             }
 
@@ -108,14 +106,14 @@ public class UserService {
             idFriendsListAcc = userStorage.getUserById(idHost).getFriendship().get(FriendshipStatus.ACCEPTED);
         }
 
-        (idFriendsListPen).add(userStorage.getUsers().get(idFriend));
+        (idFriendsListPen).add(userStorage.getUserById(idFriend));
         newFriendship.put(FriendshipStatus.PENDING, idFriendsListPen);
         newFriendship.put(FriendshipStatus.ACCEPTED, idFriendsListAcc);
         userStorage.getUserById(idHost).setFriendship(newFriendship);
-    }
+    }*/
 
-    private void safelyRemoveFriends(Integer idHost, Integer idFriend) {
-        if (userStorage.getUserById(idHost).getFriendship() != null) {
+    /* private void safelyRemoveFriends(Integer idHost, Integer idFriend) {
+       if (userStorage.getUserById(idHost).getFriendship() != null) {
             Map<FriendshipStatus, List<User>> newFriendship = new EnumMap<>(FriendshipStatus.class);
             newFriendship.put(FriendshipStatus.PENDING, null);
             newFriendship.put(FriendshipStatus.ACCEPTED, null);
@@ -137,6 +135,6 @@ public class UserService {
         } else {
             throw new NotFoundException("Список друзей и так пуст");
         }
-    }
+    }*/
 
 }

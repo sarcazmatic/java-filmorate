@@ -33,6 +33,12 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
+    @ResponseStatus(HttpStatus.CREATED)
+    public ErrorResponse handleDefaultDataException(final DefaultDataException e) {
+        return new ErrorResponse("Нехватка данных в json", e.getMessage());
+    }
+
+    @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleRuntimeException(final RuntimeException e) {
         return new ErrorResponse("Внутренняя ошибка сервера", e.getMessage());

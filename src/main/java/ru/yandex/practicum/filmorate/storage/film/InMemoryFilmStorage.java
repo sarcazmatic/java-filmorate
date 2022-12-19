@@ -58,7 +58,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         return films.get(id);
     }
 
-        @Override
+    @Override
     public void filmValidate(Film film) {
         if (StringUtils.isBlank(film.getName())) {
             log.error("Ошибка валидации фильма: название фильма");
