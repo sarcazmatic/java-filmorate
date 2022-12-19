@@ -104,7 +104,6 @@ public class FilmDbStorage implements FilmStorage {
                 genres.add(genreCheck);
             }
         }
-        System.out.println(genres);
         return genres;
     }
 

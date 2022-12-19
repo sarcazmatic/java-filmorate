@@ -77,13 +77,12 @@ class FilmorateApplicationTests {
     @Test
     public void testFindUsers() {
         Map<Integer, User> users = userStorage.getUsers();
-        System.out.println(users);
         assertThat(users.containsKey(1) && users.containsKey(2) && users.containsValue(user1) && users.containsValue(user2));
     }
 
     @Test
     public void testFindUserById() {
-        assertThat(userStorage.getUserById(1)).hasFieldOrPropertyWithValue("id", 1);
+        assertThat(userStorage.getUserById(user2.getId())).hasFieldOrPropertyWithValue("id", user2.getId());
     }
 
     @Test
