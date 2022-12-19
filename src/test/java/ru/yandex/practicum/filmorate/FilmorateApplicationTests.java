@@ -14,6 +14,7 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -50,14 +51,14 @@ class FilmorateApplicationTests {
         mpa1 = new Mpa<>("G", 1);
         mpa2 = new Mpa<>("R", 5);
         ld1 = LocalDate.now().minusYears(20);
-        user1 = new User(1, "vlad@yandex.ru", "validvlad", "valid vlad", ld1, null);
+        user1 = new User(1, "vlad@yandex.ru", "validvlad", "valid vlad", ld1, new ArrayList<>());
         ld2 = LocalDate.now().minusYears(35);
-        user2 = new User(2, "lad@yandex.ru", "lidvlad", "lid vlad", ld2, null);
+        user2 = new User(2, "lad@yandex.ru", "lidvlad", "lid vlad", ld2, new ArrayList<>());
         ld6 = LocalDate.now().minusYears(25);
-        user6 = new User(6, "azure@friend.ru", "azure", "", ld6, null);
-        film1 = new Film(1, "Любовь и голуби", "Про любовь и голубей", ld1, 120, 3, null, mpa1, null);
-        film2 = new Film(2, "Разлука и голуби", "Про разлуку и голубей", ld2, 110, 5, null, mpa2, null);
-        film6 = new Film(6, "Возвращение голубей", "Голуби наносят ответный удар", ld6, 30, 1, null, mpa2, null);
+        user6 = new User(6, "azure@friend.ru", "azure", "", ld6, new ArrayList<>());
+        film1 = new Film(1, "Любовь и голуби", "Про любовь и голубей", ld1, 120, 3, new ArrayList<>(), mpa1, new ArrayList<>());
+        film2 = new Film(2, "Разлука и голуби", "Про разлуку и голубей", ld2, 110, 5, new ArrayList<>(), mpa2, new ArrayList<>());
+        film6 = new Film(6, "Возвращение голубей", "Голуби наносят ответный удар", ld6, 30, 1, new ArrayList<>(), mpa2, new ArrayList<>());
 
     }
 
@@ -74,6 +75,11 @@ class FilmorateApplicationTests {
     public void testFindUsers() {
         Map<Integer, User> users = userStorage.getUsers();
         assertThat(users.containsKey(1) && users.containsKey(2) && users.containsValue(user1) && users.containsValue(user2));
+    }
+
+    @Test
+    public void testFindUserById() {
+        assertThat(userStorage.getUserById(user2.getId())).isEqualTo(user2);
     }
 
     @Test
