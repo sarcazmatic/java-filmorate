@@ -144,12 +144,7 @@ public class UserDbStorage implements UserStorage {
     public void deleteUsers(User user) {
         SqlRowSet userRows = jdbcTemplate.queryForRowSet("select * from users where user_id = ?", user.getId());
         if (userRows.next()) {
-            User dbUser = createUserFromSQL(userRows);
-            if (dbUser.equals(user)) {
                 jdbcTemplate.execute("DELETE FROM users WHERE user_id = '" + user.getId() + "';");
-            } else {
-                throw new ValidationException("Пользователи не совпадают");
-            }
         } else {
             throw new NotFoundException("Пользователя с таким id нет, удалять нечего");
         }
@@ -187,8 +182,7 @@ public class UserDbStorage implements UserStorage {
     public void putFriend(int idHost, int idFriend) {
         SqlRowSet userRowsHost = jdbcTemplate.queryForRowSet("select * FROM FRIENDSHIPS as f WHERE f.user_id = ? AND f.friend_id = ?", idHost, idFriend);
         if (!userRowsHost.next()) {
-            jdbcTemplate.execute("MERGE INTO FRIENDSHIPS (friendship_id, user_id, friend_id, friendship_status)" +
-                    "VALUES ('" + (getCurrentIdFriendships() + 1) + "', '" + idHost + "', '" + idFriend + "', '" + FriendshipStatus.PENDING + "');");
+            jdbcTemplate.execute("MERGE INTO FRIENDSHIPS (friendship_id, user_id, friend_id, friendship_status) VALUES ('" + (getCurrentIdFriendships() + 1) + "', '" + idHost + "', '" + idFriend + "', '" + FriendshipStatus.PENDING + "');");
         } else {
             throw new NotFoundException("Такая дружба уже есть");
         }
