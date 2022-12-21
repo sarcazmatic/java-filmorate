@@ -151,14 +151,13 @@ public class FilmDbStorage implements FilmStorage {
                 return statement;
             }, keyHolder);
             film.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
-            try {
-                List<Genre> genresTemp = film.getGenres();
+            Optional<List<Genre>> genresTemp = Optional.ofNullable(film.getGenres());
+            if (genresTemp.isPresent()) {
                 String sqlQueryFilmGenres = "INSERT INTO FILM_GENRE (GENRE_ID, FILM_ID)" +
                         "VALUES (?, ?);";
-                for (Genre g : genresTemp) {
+                for (Genre g : genresTemp.get()) {
                     jdbcTemplate.update(sqlQueryFilmGenres, g.getId(), film.getId());
                 }
-            } catch (NullPointerException e) {
             }
         }
         return getFilmById(film.getId());
@@ -182,31 +181,30 @@ public class FilmDbStorage implements FilmStorage {
                     film.getMpa().getId(),
                     film.getId()
             );
-            try {
-                List<Genre> tempGenresUpd = film.getGenres();
+            Optional<List<Genre>> tempGenresUpd = Optional.ofNullable(film.getGenres());
+            if (tempGenresUpd.isPresent()) {
                 String sqlGenresUDel = "DELETE FROM FILM_GENRE WHERE FILM_ID = ?";
                 jdbcTemplate.update(sqlGenresUDel, film.getId());
                 String sqlGenresUpd = "INSERT INTO FILM_GENRE (GENRE_ID, FILM_ID) VALUES (?, ?);";
-                for (Genre g : tempGenresUpd) {
+                for (Genre g : tempGenresUpd.get()) {
                     jdbcTemplate.update(sqlGenresUpd, g.getId(), film.getId());
                 }
-            } catch (NullPointerException e) {
             }
-            try {
-                List<User> likesUpd = film.getLikes();
+            Optional<List<User>> likesUpd = Optional.ofNullable(film.getLikes());
+            if (likesUpd.isPresent()) {
                 String sqlLikesDel = "DELETE FROM FILM_LIKES WHERE FILM_ID = ?";
                 jdbcTemplate.update(sqlLikesDel, film.getId());
                 String sqlLikesUpd = "INSERT INTO FILM_LIKES (FILM_ID, USER_ID) VALUES (?, ?);";
-                for (User u : likesUpd) {
+                for (User u : likesUpd.get()) {
                     jdbcTemplate.update(sqlLikesUpd, film.getId(), u.getId());
                 }
-            } catch (NullPointerException e) {
             }
             return getFilmById(film.getId());
         } else {
             log.info("Фильм с именем {} и датой выхода {} не найден.", film.getName(), film.getReleaseDate());
             throw new NotFoundException("Не нашли подходящего фильма");
         }
+
     }
 
     @Override

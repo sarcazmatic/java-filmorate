@@ -15,10 +15,14 @@ import java.util.List;
 @Builder(toBuilder = true)
 public class Film {
     private int id;
-    private final @NonNull String name;
-    private final @NonNull String description;
-    private final @NonNull LocalDate releaseDate;
-    private final @NonNull int duration;
+    @NonNull
+    private final String name;
+    @NonNull
+    private final String description;
+    @NonNull
+    private final LocalDate releaseDate;
+    @NonNull
+    private final int duration;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     @Builder.Default
     private int rate = 0;
@@ -26,8 +30,7 @@ public class Film {
     @Builder.Default
     private List<User> likes = new ArrayList<>();
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    @Builder.Default
-    private Mpa mpa = new Mpa("NULL", 0);
+    private Mpa mpa;
     @Builder.Default
     private List<Genre> genres = new ArrayList<>();
 }

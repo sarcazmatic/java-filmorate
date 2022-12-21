@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -12,8 +13,8 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
+import java.sql.*;
 import java.sql.Date;
-import java.sql.PreparedStatement;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -91,7 +92,7 @@ public class UserDbStorage implements UserStorage {
         if (!userRows.next()) {
             KeyHolder keyHolder = new GeneratedKeyHolder();
             String sqlQueryPost = "INSERT INTO USERS (EMAIL, LOGIN, NAME, BIRTHDAY_DATE) VALUES (?, ?, ? ,?);";
-            jdbcTemplate.update(connection -> {
+            jdbcTemplate.update((connection) -> {
                 PreparedStatement statement = connection.prepareStatement(sqlQueryPost, new String[]{"USER_ID"});
                 statement.setString(1, user.getEmail());
                 statement.setString(2, user.getLogin());
@@ -134,30 +135,6 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public void userValidate(User user) {
-        if (user.getName() == null || StringUtils.isBlank(user.getName())) {
-            user.setName(user.getLogin());
-            log.debug("Вот тут ловим пустое имя и меняем на " + user.getName());
-        }
-        if (StringUtils.isBlank(user.getEmail())) {
-            log.error("Ошибка валидации пользователя: e-mail пуст/из пробелов");
-            throw new ValidationException("Пользователь не соответствует критериям: e-mail пуст или состоит из пробелов");
-        } else if (!StringUtils.contains(user.getEmail(), '@')) {
-            log.error("Ошибка валидации пользователя: в e-mail отсутствует @");
-            throw new ValidationException("Пользователь не соответствует критериям: e-mail не содержит @");
-        } else if (StringUtils.isBlank(user.getLogin())) {
-            log.error("Ошибка валидации пользователя: логин пуст");
-            throw new ValidationException("Пользователь не соответствует критериям: логин пуст");
-        } else if (StringUtils.contains(user.getLogin(), ' ')) {
-            log.error("Ошибка валидации пользователя: логин содержит пробелы");
-            throw new ValidationException("Пользователь не соответствует критериям: пробелы в логине недопустимы");
-        } else if (user.getBirthday().isAfter(LocalDate.now()) || user.getBirthday() == null) {
-            log.error("Ошибка валидации пользователя: дата рождения не наступила");
-            throw new ValidationException("Пользователь не соответствует критериям: нельзя родиться в будущем");
-        }
-    }
-
-    @Override
     public void putFriend(int idHost, int idFriend) {
         String sqlQuery = "SELECT * FROM FRIENDSHIPS as f WHERE f.USER_ID = ? AND f.FRIEND_ID = ?;";
         SqlRowSet friendsRow = jdbcTemplate.queryForRowSet(sqlQuery, idHost, idFriend);
@@ -180,6 +157,29 @@ public class UserDbStorage implements UserStorage {
         }
     }
 
+    @Override
+    public void userValidate(User user) {
+        if (StringUtils.isBlank(user.getName())) {
+            user.setName(user.getLogin());
+            log.debug("Вот тут ловим пустое имя и меняем на " + user.getName());
+        }
+        if (StringUtils.isBlank(user.getEmail())) {
+            log.error("Ошибка валидации пользователя: e-mail пуст/из пробелов");
+            throw new ValidationException("Пользователь не соответствует критериям: e-mail пуст или состоит из пробелов");
+        } else if (!StringUtils.contains(user.getEmail(), '@')) {
+            log.error("Ошибка валидации пользователя: в e-mail отсутствует @");
+            throw new ValidationException("Пользователь не соответствует критериям: e-mail не содержит @");
+        } else if (StringUtils.isBlank(user.getLogin())) {
+            log.error("Ошибка валидации пользователя: логин пуст");
+            throw new ValidationException("Пользователь не соответствует критериям: логин пуст");
+        } else if (StringUtils.contains(user.getLogin(), ' ')) {
+            log.error("Ошибка валидации пользователя: логин содержит пробелы");
+            throw new ValidationException("Пользователь не соответствует критериям: пробелы в логине недопустимы");
+        } else if (user.getBirthday().isAfter(LocalDate.now()) || user.getBirthday() == null) {
+            log.error("Ошибка валидации пользователя: дата рождения не наступила");
+            throw new ValidationException("Пользователь не соответствует критериям: нельзя родиться в будущем");
+        }
+    }
 
 }
 
