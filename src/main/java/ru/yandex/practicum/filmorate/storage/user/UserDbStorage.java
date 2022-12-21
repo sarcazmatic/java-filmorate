@@ -109,7 +109,6 @@ public class UserDbStorage implements UserStorage {
     @Override
     public User putUsers(User user) {
         userValidate(user);
-        System.out.println("!!!!!!!!!!!! " + user.getId());
         String sqlQuery = "SELECT * FROM USERS WHERE USER_ID = ?;";
         SqlRowSet usersRow = jdbcTemplate.queryForRowSet(sqlQuery, user.getId());
         if (usersRow.next()) {
