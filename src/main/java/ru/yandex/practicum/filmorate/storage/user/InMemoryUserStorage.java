@@ -35,7 +35,8 @@ public class InMemoryUserStorage implements UserStorage {
         user.setId(users.size() + 1);
         users.put(user.getId(), user);
         log.info("Добавлен пользователь: " + user);
-        return users.get(user.getId());    }
+        return users.get(user.getId());
+    }
 
     @Override
     public User putUsers(User user) {
@@ -87,10 +88,10 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public void removeFriends(int i, int k){
+    public void removeFriends(int i, int k) {
     }
 
-@Override
+    @Override
     public List<User> getUsersFriends(Integer id) {
         return null;
     }

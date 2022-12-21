@@ -1,22 +1,16 @@
 package ru.yandex.practicum.filmorate.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 
 @Builder
 @Data
-@RequiredArgsConstructor
-public class Mpa<String, Integer> {
+@AllArgsConstructor
+public class Mpa {
 
     private String name;
-    @Builder.Default private int id = 1;
-
-
-    public Mpa(String name, int id){
-        this.name = name;
-        this.id = id;
-    }
+    private int id;
 
 }

@@ -1,11 +1,9 @@
 package ru.yandex.practicum.filmorate.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
-import org.springframework.context.annotation.Primary;
 
 import javax.validation.constraints.Email;
 import java.time.LocalDate;
@@ -21,7 +19,7 @@ public class User {
     private String name;
     private @NonNull LocalDate birthday;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private List<User> friendship;
+    @Builder.Default private List<User> friendship = new ArrayList<>();
 
     public User(int id, String email, String login, String name, LocalDate birthday, List<User> friendship){
         this.id = id;
@@ -34,6 +32,10 @@ public class User {
 
     public void setFriendship(List<User> newFriendship) {
         friendship = newFriendship;
+    }
+
+    public void addFriend(User user) {
+        friendship.add(user);
     }
 
     public List<User> getFriendship() {

@@ -15,9 +15,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,16 +38,16 @@ class FilmorateApplicationTests {
     static Film film6;
     static User user6;
 
-    static Mpa<String, Integer> mpa1;
-    static Mpa<String, Integer> mpa2;
+    static Mpa mpa1;
+    static Mpa mpa2;
 
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
 
     @BeforeAll
     static void prepare(){
-        mpa1 = new Mpa<>("G", 1);
-        mpa2 = new Mpa<>("R", 5);
+        mpa1 = new Mpa("G", 1);
+        mpa2 = new Mpa("R", 5);
         ld1 = LocalDate.now().minusYears(20);
         user1 = new User(1, "vlad@yandex.ru", "validvlad", "valid vlad", ld1, new ArrayList<>());
         ld2 = LocalDate.now().minusYears(35);

@@ -1,13 +1,9 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.AlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.URLParametersException;
-import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -61,12 +57,10 @@ public class UserService {
     }
 
     public List<User> getUserFriends(Integer id) {
-
         List<User> friends = new ArrayList<>();
         if (userStorage.getUserById(id).getFriendship() != null) {
-                friends = userStorage.getUsersFriends(id);
+            friends = userStorage.getUsersFriends(id);
         }
-
         return friends;
     }
 
@@ -83,58 +77,7 @@ public class UserService {
                 }
             }
         }
-
         return commonFriends;
     }
-
-    /*private void createAndAddFriend(int idHost, int idFriend) {
-        Map<FriendshipStatus, List<User>> newFriendship = new EnumMap<>(FriendshipStatus.class);
-        List<User> idFriendsListPen = new ArrayList<>();
-        List<User> idFriendsListAcc = new ArrayList<>();
-        newFriendship.put(FriendshipStatus.PENDING, null);
-        newFriendship.put(FriendshipStatus.ACCEPTED, null);
-        if (userStorage.getUserById(idHost).getFriendship() != null) {
-            if ((userStorage.getUserById(idHost).getFriendship().get(FriendshipStatus.PENDING)).contains(userStorage.getUserById(idFriend))) {
-                throw new AlreadyAddedException("Друг уже дожидается апрува");
-            }
-
-            if ((userStorage.getUserById(idHost).getFriendship().get(FriendshipStatus.ACCEPTED)).contains(userStorage.getUserById(idFriend))) {
-                throw new AlreadyAddedException("Друг уже дружит с вами");
-            }
-
-            idFriendsListPen = userStorage.getUserById(idHost).getFriendship().get(FriendshipStatus.PENDING);
-            idFriendsListAcc = userStorage.getUserById(idHost).getFriendship().get(FriendshipStatus.ACCEPTED);
-        }
-
-        (idFriendsListPen).add(userStorage.getUserById(idFriend));
-        newFriendship.put(FriendshipStatus.PENDING, idFriendsListPen);
-        newFriendship.put(FriendshipStatus.ACCEPTED, idFriendsListAcc);
-        userStorage.getUserById(idHost).setFriendship(newFriendship);
-    }*/
-
-    /* private void safelyRemoveFriends(Integer idHost, Integer idFriend) {
-       if (userStorage.getUserById(idHost).getFriendship() != null) {
-            Map<FriendshipStatus, List<User>> newFriendship = new EnumMap<>(FriendshipStatus.class);
-            newFriendship.put(FriendshipStatus.PENDING, null);
-            newFriendship.put(FriendshipStatus.ACCEPTED, null);
-            List<User> idFriendsListPen = userStorage.getUserById(idHost).getFriendship().get(FriendshipStatus.PENDING);
-            List<User> idFriendsListAcc = userStorage.getUserById(idHost).getFriendship().get(FriendshipStatus.ACCEPTED);
-            if (idFriendsListPen.contains(userStorage.getUsers().get(idFriend))) {
-                idFriendsListPen.remove(userStorage.getUsers().get(idFriend));
-            } else {
-                if (!idFriendsListAcc.contains(userStorage.getUsers().get(idFriend))) {
-                    throw new NotFoundException("Друзья не найдены");
-                }
-
-                idFriendsListAcc.remove(userStorage.getUsers().get(idFriend));
-            }
-
-            newFriendship.put(FriendshipStatus.PENDING, idFriendsListPen);
-            newFriendship.put(FriendshipStatus.ACCEPTED, idFriendsListAcc);
-            (userStorage.getUsers().get(idHost)).setFriendship(newFriendship);
-        } else {
-            throw new NotFoundException("Список друзей и так пуст");
-        }
-    }*/
 
 }

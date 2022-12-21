@@ -1,54 +1,38 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.AlreadyAddedException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 
+import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.time.LocalDate;
 import java.util.*;
 
 @Component
 @Primary
+@Slf4j
 public class UserDbStorage implements UserStorage {
 
-    private final Logger log = LoggerFactory.getLogger(UserDbStorage.class);
     private final JdbcTemplate jdbcTemplate;
 
     public UserDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public int getCurrentId() {
-        int currentId = 0;
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("select MAX(user_id) as c from users;");
-        if (userRows.next()) {
-            currentId = userRows.getInt("c");
-        }
-        return currentId;
-    }
-
-    public int getCurrentIdFriendships() {
-        int currentId = 0;
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("select MAX(friendship_id) as m from friendships;");
-        if (userRows.next()) {
-            currentId = userRows.getInt("m");
-        }
-        return currentId;
-    }
-
     @Override
     public Map<Integer, User> getUsers() {
         Map<Integer, User> userMap = new HashMap<>();
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("select * from users as u LEFT OUTER JOIN FRIENDSHIPS as f ON u.user_id = f.user_id");
+        String sqlQuery = "SELECT * FROM USERS as u LEFT OUTER JOIN FRIENDSHIPS as f ON u.USER_ID = f.USER_ID;";
+        SqlRowSet userRows = jdbcTemplate.queryForRowSet(sqlQuery);
         while (userRows.next()) {
             User user = createUserFromSQL(userRows);
             log.info("Найден пользователь: {} {}", user.getId(), user.getEmail());
@@ -60,12 +44,11 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User getUserById(Integer id) {
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("select * from users as u WHERE u.user_id = ?", id);
+        String sqlQuery = "SELECT * FROM USERS as u WHERE u.USER_ID = ?;";
+        SqlRowSet userRows = jdbcTemplate.queryForRowSet(sqlQuery, id);
         if (userRows.next()) {
-            User user = createUserFromSQL(userRows);
-            user.setFriendship(getUsersFriends(id));
-            log.info("Найден пользователь: {} {}", user.getId(), user.getEmail());
-            return user;
+            log.info("Пользователь с идентификатором {} найден.", id);
+            return createUserFromSQL(userRows);
         } else {
             log.info("Пользователь с идентификатором {} не найден.", id);
             return null;
@@ -74,41 +57,50 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> getUsersFriends(Integer id) {
-        List<User> userFriendships = new ArrayList<>();
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("select * from friendships as f left join users as u on f.friend_id=u.user_id where f.user_id = ?", id);
-        while (userRows.next()) {
-            User user = createUserFromSQL(userRows);
-            user.setId(userRows.getInt("friend_id"));
-            userFriendships.add(user);
-        }
-        return userFriendships;
+        String sqlQuery = "SELECT * FROM FRIENDSHIPS as f LEFT JOIN USERS as u ON f.FRIEND_ID=u.USER_ID " +
+                "WHERE f.USER_ID = ?;";
+        return jdbcTemplate.query(sqlQuery, (rs, rowNum) -> new User(
+                rs.getInt("FRIEND_ID"),
+                rs.getString("EMAIL"),
+                rs.getString("LOGIN"),
+                rs.getString("NAME"),
+                rs.getDate("BIRTHDAY_DATE").toLocalDate(),
+                new ArrayList<>()
+        ), id);
     }
 
     public User createUserFromSQL(SqlRowSet userRows) {
-        return new User(
-                userRows.getInt("user_id"),
+        int id = userRows.getInt("user_id");
+        User user = new User(
+                id,
                 userRows.getString("email"),
                 userRows.getString("login"),
                 userRows.getString("name"),
                 userRows.getDate("birthday_date").toLocalDate(),
                 new ArrayList<>());
+        user.setFriendship(getUsersFriends(id));
+        return user;
     }
 
     @Override
     public User postUsers(User user) {
         userValidate(user);
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("select * from users as u LEFT OUTER JOIN FRIENDSHIPS as f ON u.user_id = f.user_id WHERE u.email = ?", user.getEmail());
+        String sqlQuery = "SELECT * FROM USERS as u LEFT OUTER JOIN FRIENDSHIPS as f ON u.USER_ID = f.USER_ID " +
+                "WHERE u.EMAIL = ?;";
+        SqlRowSet userRows = jdbcTemplate.queryForRowSet(sqlQuery, user.getEmail());
         if (!userRows.next()) {
-            int id = getCurrentId() + 1;
-            String email = user.getEmail();
-            String login = user.getLogin();
-            String name = user.getName();
-            LocalDate date = user.getBirthday();
-            jdbcTemplate.execute(
-                    "MERGE INTO USERS (USER_ID, EMAIL, LOGIN, NAME, BIRTHDAY_DATE) " +
-                            "VALUES ('" + id + "', '" + email + "', '" + login + "', '" + name + "', '" + date + "');"
-            );
-            return getUserById(id);
+            KeyHolder keyHolder = new GeneratedKeyHolder();
+            String sqlQueryPost = "INSERT INTO USERS (EMAIL, LOGIN, NAME, BIRTHDAY_DATE) VALUES (?, ?, ? ,?);";
+            jdbcTemplate.update(connection -> {
+                PreparedStatement statement = connection.prepareStatement(sqlQueryPost, new String[]{"USER_ID"});
+                statement.setString(1, user.getEmail());
+                statement.setString(2, user.getLogin());
+                statement.setString(3, user.getName());
+                statement.setDate(4, Date.valueOf(user.getBirthday()));
+                return statement;
+            }, keyHolder);
+            user.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
+            return getUserById(user.getId());
         } else {
             throw new NotFoundException("Такой пользователь уже имеется");
         }
@@ -117,34 +109,26 @@ public class UserDbStorage implements UserStorage {
     @Override
     public User putUsers(User user) {
         userValidate(user);
-        int id = user.getId();
-        String email = user.getEmail();
-        String login = user.getLogin();
-        String name = user.getName();
-        LocalDate date = user.getBirthday();
-
-        try {
-            User userDb = getUserById(id);
-            if (user.getId() == userDb.getId()) {
-                jdbcTemplate.execute(
-                        "MERGE INTO USERS (USER_ID, EMAIL, LOGIN, NAME, BIRTHDAY_DATE) " +
-                                "VALUES ('" + id + "', '" + email + "', '" + login + "', '" + name + "', '" + date + "');"
-                );
-            } else {
-                postUsers(user);
-            }
-        } catch (RuntimeException e) {
-            throw new NotFoundException("Пользователь с таким e-mail и id не найден");
+        System.out.println("!!!!!!!!!!!! " + user.getId());
+        String sqlQuery = "SELECT * FROM USERS WHERE USER_ID = ?;";
+        SqlRowSet usersRow = jdbcTemplate.queryForRowSet(sqlQuery, user.getId());
+        if (usersRow.next()) {
+            String sqlQueryPut = "UPDATE USERS SET EMAIL = ?, LOGIN = ?, NAME = ?, BIRTHDAY_DATE = ? WHERE USER_ID = ?;";
+            jdbcTemplate.update(sqlQueryPut, user.getEmail(), user.getLogin(),
+                    user.getName(), user.getBirthday(), user.getId());
+        } else {
+            postUsers(user);
         }
-
-        return getUserById(id);
+        return getUserById(user.getId());
     }
 
     @Override
     public void deleteUsers(User user) {
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("select * from users where user_id = ?", user.getId());
+        String sqlQuery = "SELECT * FROM USERS WHERE USER_ID = ?;";
+        SqlRowSet userRows = jdbcTemplate.queryForRowSet(sqlQuery, user.getId());
         if (userRows.next()) {
-                jdbcTemplate.execute("DELETE FROM users WHERE user_id = '" + user.getId() + "';");
+            String sqlQueryDel = "DELETE FROM USERS WHERE USER_ID = ?;";
+            jdbcTemplate.update(sqlQueryDel, user.getId());
         } else {
             throw new NotFoundException("Пользователя с таким id нет, удалять нечего");
         }
@@ -155,10 +139,6 @@ public class UserDbStorage implements UserStorage {
         if (user.getName() == null || StringUtils.isBlank(user.getName())) {
             user.setName(user.getLogin());
             log.debug("Вот тут ловим пустое имя и меняем на " + user.getName());
-        }
-        if (user.getId() <= 0) {
-            user.setId(getCurrentId() + 1);
-            log.debug("Идентификатор не может быть < или = 0");
         }
         if (StringUtils.isBlank(user.getEmail())) {
             log.error("Ошибка валидации пользователя: e-mail пуст/из пробелов");
@@ -180,19 +160,24 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public void putFriend(int idHost, int idFriend) {
-        SqlRowSet userRowsHost = jdbcTemplate.queryForRowSet("select * FROM FRIENDSHIPS as f WHERE f.user_id = ? AND f.friend_id = ?", idHost, idFriend);
-        if (!userRowsHost.next()) {
-            jdbcTemplate.execute("MERGE INTO FRIENDSHIPS (friendship_id, user_id, friend_id, friendship_status) VALUES ('" + (getCurrentIdFriendships() + 1) + "', '" + idHost + "', '" + idFriend + "', '" + FriendshipStatus.PENDING + "');");
+        String sqlQuery = "SELECT * FROM FRIENDSHIPS as f WHERE f.USER_ID = ? AND f.FRIEND_ID = ?;";
+        SqlRowSet friendsRow = jdbcTemplate.queryForRowSet(sqlQuery, idHost, idFriend);
+        if (!friendsRow.next()) {
+            String sqlQueryPutFriend = "INSERT INTO FRIENDSHIPS (USER_ID, FRIEND_ID, FRIENDSHIP_STATUS) " +
+                    "VALUES (?, ?, ?);";
+            jdbcTemplate.update(sqlQueryPutFriend, idHost, idFriend, "PENDING");
         } else {
             throw new NotFoundException("Такая дружба уже есть");
         }
     }
 
     @Override
-    public void removeFriends(int idHost, int friendId){
-        SqlRowSet userRowsHost = jdbcTemplate.queryForRowSet("select * FROM FRIENDSHIPS as f WHERE f.user_id = ? AND f.friend_id = ?", idHost, friendId);
-        if (userRowsHost.next()) {
-            jdbcTemplate.execute("DELETE FROM FRIENDSHIPS WHERE user_id = '"+idHost+"' AND friend_id = '"+friendId+"';");
+    public void removeFriends(int idHost, int idFriend) {
+        String sqlQuery = "SELECT * FROM FRIENDSHIPS as f WHERE f.USER_ID = ? AND f.FRIEND_ID = ?;";
+        SqlRowSet friendsRow = jdbcTemplate.queryForRowSet(sqlQuery, idHost, idFriend);
+        if (friendsRow.next()) {
+            String sqlQueryDel = "DELETE FROM FRIENDSHIPS WHERE USER_ID = ? AND FRIEND_ID = ?;";
+            jdbcTemplate.update(sqlQueryDel, idHost, idFriend);
         }
     }
 

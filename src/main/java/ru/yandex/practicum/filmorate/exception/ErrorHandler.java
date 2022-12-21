@@ -22,13 +22,13 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleURLParametersException(final URLParametersException e){
+    public ErrorResponse handleURLParametersException(final URLParametersException e) {
         return new ErrorResponse("Ошибка в передачи параметров URL", e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleAlreadyAddedException(final AlreadyAddedException e){
+    public ErrorResponse handleAlreadyAddedException(final AlreadyAddedException e) {
         return new ErrorResponse("Данные уже найдены", e.getMessage());
     }
 

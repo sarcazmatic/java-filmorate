@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -23,6 +22,10 @@ public class FilmService {
         return filmStorage.getFilms();
     }
 
+    public Film getFilmById(Integer id) {
+        return filmStorage.getFilmById(id);
+    }
+
     public Film postFilms(Film film) {
         return filmStorage.postFilms(film);
     }
@@ -35,10 +38,6 @@ public class FilmService {
         filmStorage.deleteFilms(film);
     }
 
-    public Film getFilmById(Integer id) {
-        return filmStorage.getFilmById(id);
-    }
-
     public List<User> likeFilm(Integer id, Integer userId) {
         List<User> likesList;
         if (filmStorage.getFilmById(id).getLikes() == null) {
@@ -46,7 +45,6 @@ public class FilmService {
         } else {
             likesList = new ArrayList<>(filmStorage.getFilmById(id).getLikes());
         }
-
         likesList.add(userStorage.getUserById(userId));
         getFilmById(id).setLikes(likesList);
         Film film = getFilmById(id).toBuilder().likes(likesList).build();
@@ -57,7 +55,9 @@ public class FilmService {
 
     public void deleteLike(Integer id, Integer userId) {
         if (userStorage.getUsers().containsKey(userId)) {
-            (filmStorage.getFilms().get(id)).getLikes().remove(userStorage.getUsers().get(userId));
+            (filmStorage.getFilms().get(id)).
+                    getLikes().
+                    remove(userStorage.getUsers().get(userId));
         } else {
             throw new NotFoundException("Нельзя удалить лайк от несуществующего пользователя!");
         }
