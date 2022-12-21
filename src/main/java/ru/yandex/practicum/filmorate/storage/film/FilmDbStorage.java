@@ -159,7 +159,6 @@ public class FilmDbStorage implements FilmStorage {
                     jdbcTemplate.update(sqlQueryFilmGenres, g.getId(), film.getId());
                 }
             } catch (NullPointerException e) {
-                throw new NullPointerException("Нет жанров для обновления");
             }
         }
         return getFilmById(film.getId());
@@ -192,7 +191,6 @@ public class FilmDbStorage implements FilmStorage {
                     jdbcTemplate.update(sqlGenresUpd, g.getId(), film.getId());
                 }
             } catch (NullPointerException e) {
-                throw new NullPointerException("Нет жанров для обновления");
             }
             try {
                 List<User> likesUpd = film.getLikes();
@@ -203,7 +201,6 @@ public class FilmDbStorage implements FilmStorage {
                     jdbcTemplate.update(sqlLikesUpd, film.getId(), u.getId());
                 }
             } catch (NullPointerException e) {
-                throw new NullPointerException("Нет лайков у фильма");
             }
             return getFilmById(film.getId());
         } else {
