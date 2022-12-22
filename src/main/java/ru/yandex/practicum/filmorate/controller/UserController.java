@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exception.URLParametersException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
+import java.io.IOException;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -69,7 +70,7 @@ public class UserController {
     }
 
     @DeleteMapping
-    public void deleteUsers(@RequestBody User user) {
+    public void deleteUsers(@RequestBody User user) throws IOException {
         userService.deleteUsers(user);
     }
 

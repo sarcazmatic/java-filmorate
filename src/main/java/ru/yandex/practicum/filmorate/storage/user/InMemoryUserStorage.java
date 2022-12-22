@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -34,7 +35,8 @@ public class InMemoryUserStorage implements UserStorage {
         user.setId(users.size() + 1);
         users.put(user.getId(), user);
         log.info("Добавлен пользователь: " + user);
-        return users.get(user.getId());    }
+        return users.get(user.getId());
+    }
 
     @Override
     public User putUsers(User user) {
@@ -79,5 +81,18 @@ public class InMemoryUserStorage implements UserStorage {
             log.error("Ошибка валидации пользователя: дата рождения не наступила");
             throw new ValidationException("Пользователь не соответствует критериям: нельзя родиться в будущем");
         }
+    }
+
+    @Override
+    public void putFriend(int i, int k) {
+    }
+
+    @Override
+    public void removeFriends(int i, int k) {
+    }
+
+    @Override
+    public List<User> getUsersFriends(Integer id) {
+        return null;
     }
 }

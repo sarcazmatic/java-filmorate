@@ -17,10 +17,13 @@ import java.util.stream.Collectors;
 public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
-    private static final String LIKE = "like";
 
     public Map<Integer, Film> getFilms() {
         return filmStorage.getFilms();
+    }
+
+    public Film getFilmById(Integer id) {
+        return filmStorage.getFilmById(id);
     }
 
     public Film postFilms(Film film) {
@@ -35,10 +38,6 @@ public class FilmService {
         filmStorage.deleteFilms(film);
     }
 
-    public Film getFilmById(Integer id) {
-        return filmStorage.getFilmById(id);
-    }
-
     public List<User> likeFilm(Integer id, Integer userId) {
         List<User> likesList;
         if (filmStorage.getFilmById(id).getLikes() == null) {
@@ -46,16 +45,19 @@ public class FilmService {
         } else {
             likesList = new ArrayList<>(filmStorage.getFilmById(id).getLikes());
         }
-
         likesList.add(userStorage.getUserById(userId));
-        Film film = filmStorage.getFilmById(id).toBuilder().likes(likesList).build();
-        filmStorage.getFilms().replace(film.getId(), film);
+        getFilmById(id).setLikes(likesList);
+        Film film = getFilmById(id).toBuilder().likes(likesList).build();
+        filmStorage.putFilms(film);
         return filmStorage.getFilmById(id).getLikes();
     }
 
+
     public void deleteLike(Integer id, Integer userId) {
         if (userStorage.getUsers().containsKey(userId)) {
-            (filmStorage.getFilms().get(id)).getLikes().remove(userStorage.getUsers().get(userId));
+            (filmStorage.getFilms().get(id)).
+                    getLikes().
+                    remove(userStorage.getUsers().get(userId));
         } else {
             throw new NotFoundException("Нельзя удалить лайк от несуществующего пользователя!");
         }

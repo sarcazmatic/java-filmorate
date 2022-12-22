@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
@@ -12,20 +13,30 @@ import java.util.*;
 
 @Data
 @Builder(toBuilder = true)
+@AllArgsConstructor
 public class User {
     private int id;
-    private @Email @NonNull String email;
-    private @NonNull String login;
+    @Email
+    @NonNull
+    private String email;
+    @NonNull
+    private String login;
     private String name;
-    private @NonNull LocalDate birthday;
-    @JsonIgnore
-    private Map<FriendshipStatus, List<User>> friendship;
+    @NonNull
+    private LocalDate birthday;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @Builder.Default
+    private List<User> friendship = new ArrayList<>();
 
-    public void setFriendship(Map<FriendshipStatus, List<User>> newFriendship) {
+    public void setFriendship(List<User> newFriendship) {
         friendship = newFriendship;
     }
 
-    public Map<FriendshipStatus, List<User>> getFriendship() {
+    public void addFriend(User user) {
+        friendship.add(user);
+    }
+
+    public List<User> getFriendship() {
         return friendship;
     }
 
